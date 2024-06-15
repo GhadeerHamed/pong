@@ -22,7 +22,6 @@ var player2 *Paddle
 func main() {
 	initScreen()
 	initGameState()
-	_, height := screen.Size()
 
 	inputChan := initUserInput()
 
@@ -32,27 +31,24 @@ func main() {
 
 		key := readInput(inputChan)
 
-		if key == "Rune[q]" {
-			screen.Fini()
-			os.Exit(0)
-		} else if key == "Rune[w]" {
-			if player1.row > 0 {
-				player1.row--
-			}
-		} else if key == "Rune[s]" {
-			if player1.row < height-paddleHeight {
-				player1.row++
-			}
-		} else if key == "Up" {
-			if player2.row > 0 {
-				player2.row--
-			}
-		} else if key == "Down" {
-			if player2.row < height-paddleHeight {
-				player2.row++
-			}
-		}
+		handleUserInput(key)
 
+	}
+}
+func handleUserInput(key string) {
+	_, height := screen.Size()
+
+	if key == "Rune[q]" {
+		screen.Fini()
+		os.Exit(0)
+	} else if key == "Rune[w]" && player1.row > 0 {
+		player1.row--
+	} else if key == "Rune[s]" && player1.row+player1.height < height {
+		player1.row++
+	} else if key == "Up" && player2.row > 0 {
+		player2.row--
+	} else if key == "Down" && player2.row+player2.height < height {
+		player2.row++
 	}
 }
 
