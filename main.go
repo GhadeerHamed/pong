@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gdamore/tcell"
 )
@@ -18,18 +19,40 @@ var screen tcell.Screen
 var player1 *Paddle
 var player2 *Paddle
 
-func PrintString(row, col int, str string) {
-	for _, c := range str {
-		screen.SetContent(col, row, c, nil, tcell.StyleDefault)
-		col += 1
-	}
-}
+func main() {
+	initScreen()
+	initGameState()
+	_, height := screen.Size()
 
-func Print(row, col, width, height int, ch rune) {
-	for r := 0; r < height; r++ {
-		for c := 0; c < width; c++ {
-			screen.SetContent(col+c, row+r, ch, nil, tcell.StyleDefault)
+	inputChan := initUserInput()
+
+	for {
+		DrawState()
+		time.Sleep(50 * time.Millisecond)
+
+		key := readInput(inputChan)
+
+		if key == "Rune[q]" {
+			screen.Fini()
+			os.Exit(0)
+		} else if key == "Rune[w]" {
+			if player1.row > 0 {
+				player1.row--
+			}
+		} else if key == "Rune[s]" {
+			if player1.row < height-paddleHeight {
+				player1.row++
+			}
+		} else if key == "Up" {
+			if player2.row > 0 {
+				player2.row--
+			}
+		} else if key == "Down" {
+			if player2.row < height-paddleHeight {
+				player2.row++
+			}
 		}
+
 	}
 }
 
@@ -42,25 +65,18 @@ func DrawState() {
 	screen.Show()
 }
 
-// This program just prints "Hello, World!".  Press ESC to exit.
-func main() {
-	initScreen()
-	initGameState()
-
-	DrawState()
-
-	for {
-		switch ev := screen.PollEvent().(type) {
-		case *tcell.EventResize:
-			screen.Sync()
-			DrawState()
-		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEscape {
-				screen.Fini()
-				os.Exit(0)
+func initUserInput() chan string {
+	inputChan := make(chan string)
+	go func() {
+		for {
+			switch ev := screen.PollEvent().(type) {
+			case *tcell.EventKey:
+				inputChan <- ev.Name()
 			}
 		}
-	}
+	}()
+
+	return inputChan
 }
 
 func initScreen() {
@@ -99,5 +115,31 @@ func initGameState() {
 		col:    width - 1,
 		width:  1,
 		height: paddleHeight,
+	}
+}
+
+func readInput(inputChan chan string) string {
+	var key string
+	select {
+	case key = <-inputChan:
+	default:
+		key = ""
+	}
+
+	return key
+}
+
+func PrintString(row, col int, str string) {
+	for _, c := range str {
+		screen.SetContent(col, row, c, nil, tcell.StyleDefault)
+		col += 1
+	}
+}
+
+func Print(row, col, width, height int, ch rune) {
+	for r := 0; r < height; r++ {
+		for c := 0; c < width; c++ {
+			screen.SetContent(col+c, row+r, ch, nil, tcell.StyleDefault)
+		}
 	}
 }
