@@ -58,6 +58,28 @@ func UpdateState() {
 		gameObjects[i].row += gameObjects[i].velRow
 		gameObjects[i].col += gameObjects[i].velCol
 	}
+
+	if CollidesWithWall(ball) {
+		ball.velRow = -ball.velRow
+	}
+	if CollidesWithPlayerPaddle(ball, player1Paddle) || CollidesWithPlayerPaddle(ball, player2Paddle) {
+		ball.velCol = -ball.velCol
+	}
+}
+
+func CollidesWithWall(obj *GameObject) bool {
+	_, screenHeight := screen.Size()
+	return obj.row+obj.velRow < 0 || obj.row+obj.velRow >= screenHeight
+}
+
+func CollidesWithPlayerPaddle(obj *GameObject, p *GameObject) bool {
+
+	hitRow := obj.row >= p.row && obj.row <= p.row+paddleHeight
+	if ball.col < p.col {
+		return hitRow && obj.col+obj.velCol >= p.col
+	} else {
+		return hitRow && obj.col+obj.velCol <= p.col
+	}
 }
 
 func initUserInput() chan string {
