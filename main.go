@@ -34,13 +34,23 @@ func main() {
 
 	inputChan := initUserInput()
 
-	for {
+	for !isGameOver() {
 		handleUserInput(readInput(inputChan))
 
 		UpdateState()
 		DrawState()
 		time.Sleep(75 * time.Millisecond)
 	}
+
+	screenWidth, screenHeight := screen.Size()
+	winner := GetWinner()
+
+	PrintStringCenter(screenHeight/2-1, screenWidth/2-1, "Game Over!")
+	PrintStringCenter(screenHeight/2, screenWidth/2, winner+" wins...")
+
+	screen.Show()
+	time.Sleep(3 * time.Second)
+	screen.Fini()
 }
 
 func DrawState() {
@@ -73,13 +83,27 @@ func CollidesWithWall(obj *GameObject) bool {
 }
 
 func CollidesWithPlayerPaddle(obj *GameObject, p *GameObject) bool {
-
 	hitRow := obj.row >= p.row && obj.row <= p.row+paddleHeight
 	if ball.col < p.col {
 		return hitRow && obj.col+obj.velCol >= p.col
 	} else {
 		return hitRow && obj.col+obj.velCol <= p.col
 	}
+}
+
+func isGameOver() bool {
+	return GetWinner() != ""
+}
+
+func GetWinner() string {
+	width, _ := screen.Size()
+	if ball.col < 0 {
+		return "Player 2"
+	} else if ball.col > width {
+		return "Player 1"
+	}
+
+	return ""
 }
 
 func initUserInput() chan string {
@@ -188,6 +212,11 @@ func PrintString(row, col int, str string) {
 		screen.SetContent(col, row, c, nil, tcell.StyleDefault)
 		col += 1
 	}
+}
+
+func PrintStringCenter(row, col int, str string) {
+	col = col - len(str)/2
+	PrintString(row, col, str)
 }
 
 func Print(row, col, width, height int, ch rune) {
